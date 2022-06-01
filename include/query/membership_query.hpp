@@ -42,6 +42,10 @@ dictionary::membership_query_result membership_query_from_fasta_file_multiline(
     return result;
 }
 
+long long cur_time_micros(){
+    return (std::chrono::duration_cast< std::chrono::microseconds >(std::chrono::system_clock::now().time_since_epoch())).count();
+}
+
 template <typename Query>
 dictionary::membership_query_result membership_query_from_fasta_file(dictionary const* dict,
                                                                      std::istream& is) {
@@ -49,6 +53,8 @@ dictionary::membership_query_result membership_query_from_fasta_file(dictionary 
     std::string line;
     uint64_t k = dict->k();
     Query q(dict);
+    long long total_micros = 0;
+    long long n_queries = 0;
     while (!is.eof()) {
         q.start();
         std::getline(is, line);  // skip first header line
@@ -56,12 +62,16 @@ dictionary::membership_query_result membership_query_from_fasta_file(dictionary 
         if (line.size() < k) continue;
         for (uint64_t i = 0; i != line.size() - k + 1; ++i) {
             char const* kmer = line.data() + i;
+            long long t = cur_time_micros();
             auto answer = q.is_member(kmer);
+            total_micros += cur_time_micros() - t;
+            n_queries++;
             result.num_kmers += 1;
             result.num_valid_kmers += answer.is_valid;
             result.num_positive_kmers += answer.is_member;
         }
     }
+    std::cerr << "Total query time ns/kmer without I/O: " << total_micros/(double)n_queries << std::endl;
     result.num_searches = q.num_searches;
     result.num_extensions = q.num_extensions;
     return result;
