@@ -71,7 +71,7 @@ dictionary::membership_query_result membership_query_from_fasta_file(dictionary 
             result.num_positive_kmers += answer.is_member;
         }
     }
-    std::cerr << "Total query time ns/kmer without I/O: " << total_micros/(double)n_queries << std::endl;
+    std::cerr << "Total query time us/kmer without I/O: " << total_micros/(double)n_queries << std::endl;
     result.num_searches = q.num_searches;
     result.num_extensions = q.num_extensions;
     return result;
